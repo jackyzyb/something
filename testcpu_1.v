@@ -95,6 +95,10 @@ module testcpu_1;
     wire [1:0] ForwardBranchA,ForwardBranchB;
     wire [31:0] cmpA,cmpB;
     wire    addiE,oriE,andiE,immE;
+    wire [31:0] nextpc_predicted, final_next_pc;
+    wire Branch_predict, predict_ID;
+    wire [1:0]final_PCSrc;
+    
     
     integer i;
 
@@ -176,7 +180,12 @@ module testcpu_1;
         .addiE(addiE),
         .oriE(oriE),
         .andiE(andiE),
-        .immE(immE)
+        .immE(immE),
+        .nextpc_predicted(nextpc_predicted), 
+        .final_next_pc(final_next_pc),
+        .Branch_predict(Branch_predict),
+        .final_PCSrc(final_PCSrc),
+        .predict_ID(predict_ID)
 	);
 
 	initial begin

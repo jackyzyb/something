@@ -33,11 +33,14 @@ module ForwardUnit(IDRegRs, IDRegRt, EXRegRd, EXWB, MEMRegRd,WBRegRd,EXRegRs,EXR
     
     assign EX_RegWrite = EXWB[0] && (~EXWB[1]);
 
+    //MEMRegRd is MEMregpassed
     //ForwardBranchA
     always@(*)
     begin
         if(EX_RegWrite && ((!immE && (EXRegRd == IDRegRs)) | (immE && (EXRegRt == IDRegRs))) )
             ForwardBranchA = 2'b01;
+        else if(MEM_RegWrite && (MEMRegRd == IDRegRs))
+            ForwardBranchA = 2'b10; //forward from MEM stage
         else    
             ForwardBranchA = 2'b00;
     end

@@ -14,7 +14,6 @@ module DATAMEM(clock,MemWrite,MemRead,Addr_t,Wdata,Rdata);
     always@(posedge clock)     
         if(MemWrite)     
         begin       
-            $display("Writing %d -> Addr: %d",Wdata,Addr);
             datamem[Addr_map]<=Wdata;
             //memory write     
         end  

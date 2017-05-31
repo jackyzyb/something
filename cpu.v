@@ -4,7 +4,7 @@ module cpu(
     output reg [31:0] cycle,
          //IF vars     
     output   [31:0] nextpc,IFpc_plus_4,IFinst,
-    output reg [31:0] pc,
+    output   [31:0] pc,
          //ID vars     
     output   PCSrc,
     output   [4:0] IDRegRs,IDRegRt,IDRegRd,
@@ -33,13 +33,22 @@ module cpu(
     output   [4:0] WBRegRd,
     output   [31:0] datatowrite,WBReadData,WBALUOut,
     output   IFFlush, IDFlush, EXFlush,
-    output   [31:0] cmpA,cmpB
+    output   [31:0] cmpA,cmpB,
+    output  [31:0]  nextpc_predicted,
+    output  [31:0]  final_next_pc,
+    output      Branch_predict, predict_ID, 
+    output  [1:0] final_PCSrc
+
     );
+
+    wire branch_instr_ID;
             //initial conditions     
     initial
     begin
-        pc = 0;
         cycle = 0;
+        //Branch_predict=0;
+        //nextpc_predicted=0;
+
     end  
             //debugging variable     
     always@(posedge clock)
@@ -48,7 +57,7 @@ module cpu(
     end          
 
     //branch PC source compariosn module
-    BIGMUX2 CMPA_MUX(ForwardBranchA, IDRegAout, EXALUOut, 0, 0, cmpA);
+    BIGMUX2 CMPA_MUX(ForwardBranchA, IDRegAout, EXALUOut, MEMALUOut, 0, cmpA);
     BIGMUX2 CMPB_MUX(ForwardBranchB, IDRegBout, EXALUOut, 0, 0, cmpB);
     //assign PCSrc = ((IDRegAout==IDRegBout)&IDcontrol[6])|((IDRegAout!=IDRegBout)&bne)
     //                | (($signed(IDRegAout)>0)&bgtz);
@@ -56,31 +65,32 @@ module cpu(
                     | (($signed(cmpA)>0)&bgtz);
 
 
-    assign IFFlush = PCSrc|jump;
-    assign IDFlush = PCSrc|jump;
+    //Dynamic Branch Predict
+    Dynamic_Branch_Predict  uDynamic_Branch_Predict(clock, IFpc_plus_4, IFinst,nextpc_predicted, Branch_predict
+                ,PCSrc, final_PCSrc, predict_ID, branch_instr_ID);
+
+    assign final_next_pc = (Branch_predict & !(!predict_ID & PCSrc))?nextpc_predicted:nextpc;
+    
+
+
+    
+    assign IFFlush = ((predict_ID == PCSrc ? 0: 1)& !jump & branch_instr_ID)|jr;//PCSrc|jump;
+    assign IDFlush = ((predict_ID == PCSrc ? 0: 1)& !jump & branch_instr_ID)|jr;
     assign EXFlush = 0;
     assign IFpc_plus_4 = pc + 4;
 
  
-    assign nextpc = PCSrc ? BranchAddr : PCMuxOut;
+    //assign nextpc = BranchAddr : PCMuxOut;
+    BIGMUX2 mux_nextpc(final_PCSrc, PCMuxOut, 32'h0/*interupt*/, BranchAddr, IDpc_plus_4,nextpc);
     
- 
-    always @ (posedge clock) 
-    begin        
-        if(PCWrite)        
-        begin           
-            pc = nextpc;
-        //update pc           
-            $display("PC: %d",pc);
-        end        
-        else
-            $display("Skipped writting to PC - nop");
-//nop dont update     
-    end              
+    //PC module
+    PC_Module   PCM(clock, final_next_pc, PCWrite, pc);           
     
+    // IF //
     InstructMem IM({2'b00,pc[31:2]},IFinst);
     IFID IFIDreg(IFFlush,clock,IFIDWrite,IFpc_plus_4,IFinst,IDinst,IDpc_plus_4);
-    /**      * Instruction Decode (ID)      */     
+
+    //ID
     assign IDRegRs[4:0]=IDinst[25:21];
     assign IDRegRt[4:0]=IDinst[20:16];
     assign IDRegRd[4:0]=IDinst[15:11];
@@ -91,13 +101,13 @@ module cpu(
     assign J_Target[27:2] = IDinst[25:0];
     assign J_Target[1:0] = 0;
 
-    assign Jr_Target = IDRegAout;
+    assign Jr_Target = cmpA;
 
     assign JumpTarget=j?J_Target:Jr_Target;
 
     //about flush
     assign IDcontrol = (HazMuxCon & !IDFlush) ? ConOut : 0;
-    assign PCMuxOut = jump ? JumpTarget : IFpc_plus_4;
+    assign PCMuxOut = jump ? (jr?JumpTarget:IFpc_plus_4) : IFpc_plus_4;
     assign EXM2MEM = EXFlush?3'h0:EXM;
     assign EXWB2MEM = EXFlush?2'h0:EXWB;
 
@@ -106,7 +116,7 @@ module cpu(
 
 
     //ID to EX signal passing
-    //reg andiE,addiE, oriE, immE;
+    //reg andiE,addiE, oriE, immE, immMEM;
     always@(posedge clock)
     begin
         andiE<=andi;

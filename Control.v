@@ -1,23 +1,24 @@
-module Control(Op,func,Out,jump,bne,imm,andi,ori,addi,bgtz,j,jr);
+module Control(Op,func,Out,jump,bne,imm,andi,ori,addi,bgtz,j,jr,slti);
     input [5:0] Op;
     input [5:0] func; 
     output[8:0] Out;
-    output jump,bne,imm,andi,ori,addi,bgtz,j,jr;
+    output jump,bne,imm,andi,ori,addi,bgtz,j,jr, slti;
     wire regdst,alusrc,memtoreg,regwrite,memread,memwrite,branch;
     
     //determines type of instruction    
-    wire r = ~Op[5]&~Op[4]&~Op[3]&~Op[2]&~Op[1]&~Op[0];
-    wire lw = Op[5]&~Op[4]&~Op[3]&~Op[2]&Op[1]&Op[0];
-    wire sw = Op[5]&~Op[4]&Op[3]&~Op[2]&Op[1]&Op[0];
-    wire beq = ~Op[5]&~Op[4]&~Op[3]&Op[2]&~Op[1]&~Op[0];
-    wire bne = ~Op[5]&~Op[4]&~Op[3]&Op[2]&~Op[1]&Op[0];
-    wire bgtz = ~Op[5]&~Op[4]&~Op[3]&Op[2]&Op[1]&Op[0];
-    wire j = ~Op[5]&~Op[4]&~Op[3]&~Op[2]&Op[1]&~Op[0];
+    wire r = Op==6'h0;
+    wire lw = Op==6'b100011;
+    wire sw = Op==6'b101011;
+    wire beq = Op==6'b000100;
+    wire bne = Op==6'b000101;
+    wire bgtz = Op==6'b000111;
+    wire j = Op==6'b000010;
     wire jr=(Op==6'h0 && func == 6'h8);
-    wire andi = ~Op[5]&~Op[4]&Op[3]&Op[2]&~Op[1]&~Op[0];
-    wire ori = ~Op[5]&~Op[4]&Op[3]&Op[2]&~Op[1]&Op[0];
-    wire addi = ~Op[5]&~Op[4]&Op[3]&~Op[2]&~Op[1]&~Op[0];
-    wire imm = andi|ori|addi;
+    wire andi = Op==6'b001100;
+    wire ori = Op==6'b001101;
+    wire addi = Op==6'b001000;
+    wire slti = (Op == 6'ha);
+    wire imm = andi|ori|addi|slti;
     //immediate value type       
 
     assign jump = j | jr; 

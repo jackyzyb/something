@@ -98,6 +98,7 @@ module testcpu_1;
     wire [31:0] nextpc_predicted, final_next_pc;
     wire Branch_predict, predict_ID;
     wire [1:0]final_PCSrc;
+    wire    [4:0] EXShamt, IDShamt;
     
     
     integer i;
@@ -185,7 +186,9 @@ module testcpu_1;
         .final_next_pc(final_next_pc),
         .Branch_predict(Branch_predict),
         .final_PCSrc(final_PCSrc),
-        .predict_ID(predict_ID)
+        .predict_ID(predict_ID),
+        .IDShamt(IDShamt),
+        .EXShamt(EXShamt)
 	);
 
 	initial begin
@@ -204,6 +207,8 @@ module testcpu_1;
     
     // Instr Memory intialization  
  
+    /*
+    original test code
     
     pipelined.IM.instructmem[0] = 32'h20082000;
 pipelined.IM.instructmem[1] = 32'h01294826;
@@ -263,6 +268,76 @@ pipelined.IM.instructmem[54] = 32'h8dc90000;
 pipelined.IM.instructmem[55] = 32'h014b4820;
 pipelined.IM.instructmem[56] = 32'h01295820;
 pipelined.IM.instructmem[57] = 32'had0b0000;
+*/
+
+ pipelined.IM.instructmem[0] = 32'h20082000;
+pipelined.IM.instructmem[1] = 32'h01294826;
+pipelined.IM.instructmem[2] = 32'h014a5026;
+pipelined.IM.instructmem[3] = 32'h016b5826;
+pipelined.IM.instructmem[4] = 32'h018c6026;
+pipelined.IM.instructmem[5] = 32'h21290001;
+pipelined.IM.instructmem[6] = 32'h214a0002;
+pipelined.IM.instructmem[7] = 32'h216bffff;
+pipelined.IM.instructmem[8] = 32'h8d0c0000;
+pipelined.IM.instructmem[9] = 32'h21080004;
+pipelined.IM.instructmem[10] = 32'h012b6820;
+pipelined.IM.instructmem[11] = 32'had0d0000;
+pipelined.IM.instructmem[12] = 32'h21080004;
+pipelined.IM.instructmem[13] = 32'h012a6820;
+pipelined.IM.instructmem[14] = 32'had0d0000;
+pipelined.IM.instructmem[15] = 32'h21080004;
+pipelined.IM.instructmem[16] = 32'h012b6822;
+pipelined.IM.instructmem[17] = 32'had0d0000;
+pipelined.IM.instructmem[18] = 32'h21080004;
+pipelined.IM.instructmem[19] = 32'h01496823;
+pipelined.IM.instructmem[20] = 32'had0d0000;
+pipelined.IM.instructmem[21] = 32'h21080004;
+pipelined.IM.instructmem[22] = 32'h012b6824;
+pipelined.IM.instructmem[23] = 32'had0d0000;
+pipelined.IM.instructmem[24] = 32'h21080004;
+pipelined.IM.instructmem[25] = 32'h316d0010;
+pipelined.IM.instructmem[26] = 32'had0d0000;
+pipelined.IM.instructmem[27] = 32'h21080004;
+pipelined.IM.instructmem[28] = 32'h012a6825;
+pipelined.IM.instructmem[29] = 32'had0d0000;
+pipelined.IM.instructmem[30] = 32'h21080004;
+pipelined.IM.instructmem[31] = 32'h01696827;
+pipelined.IM.instructmem[32] = 32'had0d0000;
+pipelined.IM.instructmem[33] = 32'h21080004;
+pipelined.IM.instructmem[34] = 32'h01696826;
+pipelined.IM.instructmem[35] = 32'had0d0000;
+pipelined.IM.instructmem[36] = 32'h21080004;
+pipelined.IM.instructmem[37] = 32'h21ad0001;
+pipelined.IM.instructmem[38] = 32'h1da00001;
+pipelined.IM.instructmem[39] = 32'h08000025;
+pipelined.IM.instructmem[40] = 32'had0d0000;
+pipelined.IM.instructmem[41] = 32'h21080004;
+pipelined.IM.instructmem[42] = 32'h15a90001;
+pipelined.IM.instructmem[43] = 32'h01ad6826;
+pipelined.IM.instructmem[44] = 32'had0d0000;
+pipelined.IM.instructmem[45] = 32'h21080004;
+pipelined.IM.instructmem[46] = 32'h200e00c8;
+pipelined.IM.instructmem[47] = 32'h01ad6826;
+pipelined.IM.instructmem[48] = 32'h01c00008;
+pipelined.IM.instructmem[49] = 32'h21ad0010;
+pipelined.IM.instructmem[50] = 32'h21ad0008;
+pipelined.IM.instructmem[51] = 32'had0d0000;
+pipelined.IM.instructmem[52] = 32'h21080004;
+pipelined.IM.instructmem[53] = 32'h200e2000;
+pipelined.IM.instructmem[54] = 32'h8dc90000;
+pipelined.IM.instructmem[55] = 32'h014b4820;
+pipelined.IM.instructmem[56] = 32'h01295820;
+pipelined.IM.instructmem[57] = 32'had0b0000;
+pipelined.IM.instructmem[58] = 32'h000a7900;
+pipelined.IM.instructmem[59] = 32'h014f7804;
+pipelined.IM.instructmem[60] = 32'h000f7842;
+pipelined.IM.instructmem[61] = 32'h012f7806;
+pipelined.IM.instructmem[62] = 32'h01eb602a;
+pipelined.IM.instructmem[63] = 32'h014c582b;
+pipelined.IM.instructmem[64] = 32'h000f7843;
+pipelined.IM.instructmem[65] = 32'h016f7807;
+pipelined.IM.instructmem[66] = 32'h35ef0036;
+pipelined.IM.instructmem[67] = 32'h29eb0037;
 
  
     // Data Memory intialization  
